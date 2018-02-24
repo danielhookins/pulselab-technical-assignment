@@ -70,15 +70,32 @@
       id: 'mapbox.light',
       attribution: ''
     }).addTo(map);
+    var layersControl = L.control.layers('', {}).addTo(map);
 
     // Disaster Dataset Layer
     var disasterDataset;
+    var disasterLayer;
     $.getJSON('http://139.59.230.55/frontend/api/maps/disaster', function(data){
       disasterDataset = data.data;
       var disasterLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
         style: style
       });
-      disasterLayer.addTo(map);
+
+      disasterLayer.addTo(map)
+      layersControl.addOverlay(disasterLayer, data.name);
+    });
+
+    // Vulnerable Population Dataset Layer
+    var vulnerableDataset;
+    var vulnerableLayer;
+    $.getJSON('http://139.59.230.55/frontend/api/maps/vulnerable', function(data){
+      vulnerableDataset = data.data;
+      vulnerableLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
+        style: styleVulnerable
+      });
+
+      vulnerableLayer.addTo(map);
+      layersControl.addOverlay(vulnerableLayer, data.name);;
     });
 
     // Get the color based on value provided
@@ -101,7 +118,20 @@
 
       return {
         fillColor: getColor(disasterValue),
-        weight: 1,
+        weight: 0,
+        opacity: 0.333,
+        color: '#000',
+        fillOpacity: 0.333
+      };
+    }
+
+    // Set the style of the feature
+    function styleVulnerable(feature) {
+      var vulnerableValue = getVulnerableValueForCity(vulnerableDataset, feature.properties.id_kabkota);
+
+      return {
+        fillColor: getColor(vulnerableValue),
+        weight: 0,
         opacity: 0.333,
         color: '#000',
         fillOpacity: 0.333
@@ -116,6 +146,16 @@
           }
       }
     }
+
+    // Get the Vulnerability for Specified City ID
+    function getVulnerableValueForCity(vulnerableDataset, city_id) {
+      for(var i = 0; i < vulnerableDataset.length; i++) {
+          if( vulnerableDataset[i].city_id == city_id){
+            return vulnerableDataset[i].value / 10;
+          }
+      }
+    }
+
   </script>
 
 </body>
