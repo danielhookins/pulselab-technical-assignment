@@ -12,12 +12,6 @@
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
 
-  <!-- Bootstrap -->
-  <link rel="stylesheet"
-  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-  integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-  crossorigin="anonymous"/>
-
   <!-- MapBox -->
   <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css' rel='stylesheet' />
@@ -32,11 +26,44 @@
   crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
 
+  <!-- Bootstrap -->
+  <link rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+  integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+  crossorigin="anonymous"/>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
+
   <!-- Custom CSS Styling -->
   <style>
     body {
-      background-color: #000;
+      background-color: #fff;
+      color: rgba(0,0,0,0.87);
+      font-family: 'Oswald', sans-serif;
+    }
+
+    h1 {
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    #header-section {
+      background-color: #00aeef;
       color: #fff;
+      padding: 20px 0;
+    }
+    #header-section .un-logo {
+      width: 100px;
+      height: auto;
+    }
+    #header-section p {
+      padding-bottom: 0;
+    }
+
+
+    #map-section {
+      margin-top: 60px;
     }
 
     #mapid {
@@ -48,11 +75,24 @@
 
 </head>
 <body>
-  <div class="container-fluid">
+  <div id="header-section" class="container-fluid">
+    <div class="container">
+      <div class="row">
+        <div class="col-2">
+          <img class="un-logo" src="https://www.unglobalpulse.org/sites/all/themes/globalpulse2014/logo.png" alt="United Nations Global Pulse">
+        </div>
+        <div class="col-10">
+          <h1>United Nations Global Pulse</h1>
+          <p>Technical Assignment - Daniel Hookins</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="map-section" class="container">
     <div class="row">
 
       <div class="col-12">
-        <h1>Test</h1>
+        <h2>Number of Disasters, Vulnerable Population and Damage Area in Indonesia</h2>
         <div id="mapid"></div>
       </div>
 
