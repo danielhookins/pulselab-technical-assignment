@@ -123,6 +123,8 @@
 
       disasterLayer.addTo(map)
       layersControl.addOverlay(disasterLayer, data.name);
+
+      addToGlobalDataset(data)
     });
 
     // Vulnerable Population Dataset Layer
@@ -135,7 +137,24 @@
       });
 
       vulnerableLayer.addTo(map);
-      layersControl.addOverlay(vulnerableLayer, data.name);;
+      layersControl.addOverlay(vulnerableLayer, data.name);
+
+      addToGlobalDataset(data)
+    });
+
+    // Damage Area Dataset Layer
+    var areaDataset;
+    var areaLayer;
+    $.getJSON('http://139.59.230.55/frontend/api/maps/area', function(data){
+      areaDataset = data.data;
+      areaLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
+        style: styleArea
+      });
+
+      areaLayer.addTo(map);
+      layersControl.addOverlay(areaLayer, data.name);
+
+      addToGlobalDataset(data)
     });
 
     // Get the color based on value provided
@@ -178,6 +197,19 @@
       };
     }
 
+    // Set the style of the feature
+    function styleArea(feature) {
+      var areaValue = getAreaValueForCity(areaDataset, feature.properties.id_kabkota);
+
+      return {
+        fillColor: getColor(areaValue),
+        weight: 0,
+        opacity: 0.333,
+        color: '#000',
+        fillOpacity: 0.333
+      };
+    }
+
     // Get the Number of Disasters for Specified City ID
     function getDisasterValueForCity(disasterDataset, city_id) {
       for(var i = 0; i < disasterDataset.length; i++) {
@@ -195,6 +227,25 @@
           }
       }
     }
+
+    // Get the Area for Specified City ID
+    function getAreaValueForCity(areaDataset, city_id) {
+      for(var i = 0; i < areaDataset.length; i++) {
+          if( areaDataset[i].city_id == city_id){
+            return areaDataset[i].value / 10;
+          }
+      }
+    }
+
+    // Add to global Dataset
+    var globalDataset = {};
+    function addToGlobalDataset(data) {
+      for(var i = 0; i < data.data.length; i++) {
+          //
+      }
+    }
+
+
 
   </script>
 
