@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
 
-  <title>Daniel Hookins - Pulse Lab Jakarta</title>
+  <title>Daniel Hookins Technical Assignment - Pulse Lab Jakarta</title>
 
   <!-- JQuery -->
   <script
@@ -26,6 +26,9 @@
   crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
 
+  <!-- D3 -->
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
   <!-- Bootstrap -->
   <link rel="stylesheet"
   href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -34,19 +37,30 @@
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 
   <!-- Custom CSS Styling -->
   <style>
+
+    /*
+     * General Styling
+     */
+
     body {
       background-color: #fff;
       color: rgba(0,0,0,0.87);
+      font-family: "Open Sans", sans-serif;
+    }
+
+    h1, h2 {
+      text-transform: uppercase;
+      font-weight: 800;
       font-family: 'Oswald', sans-serif;
     }
 
-    h1 {
-      text-transform: uppercase;
-      font-weight: 800;
-    }
+    /*
+     * Header Section
+     */
 
     #header-section {
       background-color: #00aeef;
@@ -61,6 +75,9 @@
       padding-bottom: 0;
     }
 
+    /*
+     * Map Section
+     */
 
     #map-section {
       margin-top: 60px;
@@ -69,6 +86,25 @@
     #mapid {
       height: 500px;
       width: 100%;
+    }
+
+    /*
+     * Graph Section
+     */
+
+    #graph-section {
+      margin-top: 60px;
+    }
+    #graph-section #graphid .bar {
+      fill: #5f89ad;
+    }
+    #graph-section #graphid text {
+      font-size: 14px;
+    }
+    #graph-section #graphid .axis path,
+    #graph-section #graphid .axis line {
+        fill: none;
+        display: none;
     }
   </style>
 
@@ -93,6 +129,7 @@
 
       <div class="col-12">
         <h2>Number of Disasters, Vulnerable Population and Damage Area in Indonesia</h2>
+        <p><strong>The darker and more red the area the more affected it is by disasters.</strong> Use the layer selector in the top right to adjust the layer information shown.</p>
         <div id="mapid"></div>
       </div>
 
@@ -100,9 +137,14 @@
 
   </div>
 
-  <!-- Custom JavaScript -->
-  <script>
+  <div id="graph-section" class="container">
+    <h2>OD Pair Graph for Jakarta</h2>
+    <div id="graphid"></div>
+  </div>
 
+
+  <!-- Choropleth Visualisation -->
+  <script>
     // MapBox
     var mapboxAccessToken = 'pk.eyJ1IjoiZGFuaWVsaG9va2lucyIsImEiOiJjamUxMmlhejMwYWQyMndubTVxZjdzbzQ2In0.0biUD0nEuawEaTUuVOTXmQ';
     var map = L.map('mapid').setView([-2.4951303, 116.58], 5);
@@ -244,9 +286,106 @@
           //
       }
     }
+  </script>
 
+  <!-- OD Pair Data Visualisation -->
+  <script>
+  // get the data from the API
+  $.getJSON('http://139.59.230.55/frontend/api/odpair', function(data){
 
+      var sortable = [];
+      data.forEach( function (arrayItem)
+      {
+          var valueToPush = {};
+          valueToPush['name'] = arrayItem.from + " to " + arrayItem.to;
+          valueToPush['value'] = arrayItem.count;
+          sortable.push(valueToPush);
+      });
 
+      //sort bars based on value
+      data = sortable.sort(function (a, b) {
+          return d3.ascending(a.value, b.value);
+      })
+
+      // keep max value
+      var maxValue = d3.max(data, function (d) {
+          return d.value;
+      });
+
+      // Slice limit to 20% of dataset
+      data = data.slice(data.length - (data.length * 0.2), data.length);
+
+      //set up svg using margin conventions
+      // we'll need plenty of room on the left for labels
+      var margin = {
+          top: 15,
+          right: 55,
+          bottom: 15,
+          left: 130
+      };
+
+      var width = 900 - margin.left - margin.right,
+          height = 700 - margin.top - margin.bottom;
+
+      var svg = d3.select("#graphid").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var x = d3.scale.linear()
+          .range([0, width])
+          .domain([0, maxValue]);
+
+      var y = d3.scale.ordinal()
+          .rangeRoundBands([height, 0], .1)
+          .domain(data.map(function (d) {
+              return d.name;
+          }));
+
+      //make y axis to show bar names
+      var yAxis = d3.svg.axis()
+          .scale(y)
+          //no tick marks
+          .tickSize(0)
+          .orient("left");
+
+      var gy = svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+
+      var bars = svg.selectAll(".bar")
+          .data(data)
+          .enter()
+          .append("g")
+
+      //append rects
+      bars.append("rect")
+          .attr("class", "bar")
+          .attr("y", function (d) {
+              return y(d.name);
+          })
+          .attr("height", y.rangeBand())
+          .attr("x", 0)
+          .attr("width", function (d) {
+              return x(d.value);
+          });
+
+      //add a value label to the right of each bar
+      bars.append("text")
+          .attr("class", "label")
+          //y position of the label is halfway down the bar
+          .attr("y", function (d) {
+              return y(d.name) + y.rangeBand() / 2 + 4;
+          })
+          //x position is 3 pixels to the right of the bar
+          .attr("x", function (d) {
+              return x(d.value) + 3;
+          })
+          .text(function (d) {
+              return d.value;
+          });
+  });
   </script>
 
 </body>
