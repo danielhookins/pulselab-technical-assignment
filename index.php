@@ -129,7 +129,7 @@
 
       <div class="col-12">
         <h2>Number of Disasters, Vulnerable Population and Damage Area in Indonesia</h2>
-        <p><strong>The darker and more red the area the more affected it is by disasters.</strong> Use the layer selector in the top right to adjust the layer information shown.</p>
+        <p><strong>This chart shows the impact of disasters on specific regions in Indonesia.</strong> The darker and more red the area the more affected it is by disasters.</strong> Use the layer selector in the top right to adjust the layer information shown.</p>
         <div id="mapid"></div>
       </div>
 
@@ -138,255 +138,23 @@
   </div>
 
   <div id="graph-section" class="container">
-    <h2>OD Pair Graph for Jakarta</h2>
+    <h2>Line Utilisation for Jakarta</h2>
+    <p><strong>This chart shows the utilisation of transit lines in Jakarta.</strong> Results can be ordered in ascending or descending order. For brevity the graph can be limited to the top or bottom 20% of results.  Use the controls below to adjust the graph information shown.</p>
+    <div id="graph-controls">
+      <label class="radio-inline"><input type="radio" name="graphSort" value="descending" checked="" > Descending</label>
+      <label class="radio-inline"><input type="radio" name="graphSort" value="ascending" > Ascending</label>
+      <span>|</span>
+      <input id="limitDataCheckbox" type="checkbox" name="limitData" checked=""><label for="limitDataCheckbox" class="checkbox-inline">&nbsp;Limit dataset to <strong>highest</strong> 20%</label>
+    </div>
     <div id="graphid"></div>
   </div>
 
 
   <!-- Choropleth Visualisation -->
-  <script>
-    // MapBox
-    var mapboxAccessToken = 'pk.eyJ1IjoiZGFuaWVsaG9va2lucyIsImEiOiJjamUxMmlhejMwYWQyMndubTVxZjdzbzQ2In0.0biUD0nEuawEaTUuVOTXmQ';
-    var map = L.map('mapid').setView([-2.4951303, 116.58], 5);
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken, {
-      id: 'mapbox.light',
-      attribution: ''
-    }).addTo(map);
-    var layersControl = L.control.layers('', {}).addTo(map);
-
-    // Disaster Dataset Layer
-    var disasterDataset;
-    var disasterLayer;
-    $.getJSON('http://139.59.230.55/frontend/api/maps/disaster', function(data){
-      disasterDataset = data.data;
-      var disasterLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
-        style: style
-      });
-
-      disasterLayer.addTo(map)
-      layersControl.addOverlay(disasterLayer, data.name);
-
-      addToGlobalDataset(data)
-    });
-
-    // Vulnerable Population Dataset Layer
-    var vulnerableDataset;
-    var vulnerableLayer;
-    $.getJSON('http://139.59.230.55/frontend/api/maps/vulnerable', function(data){
-      vulnerableDataset = data.data;
-      vulnerableLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
-        style: styleVulnerable
-      });
-
-      vulnerableLayer.addTo(map);
-      layersControl.addOverlay(vulnerableLayer, data.name);
-
-      addToGlobalDataset(data)
-    });
-
-    // Damage Area Dataset Layer
-    var areaDataset;
-    var areaLayer;
-    $.getJSON('http://139.59.230.55/frontend/api/maps/area', function(data){
-      areaDataset = data.data;
-      areaLayer = new L.GeoJSON.AJAX("/assets/geojson/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson", {
-        style: styleArea
-      });
-
-      areaLayer.addTo(map);
-      layersControl.addOverlay(areaLayer, data.name);
-
-      addToGlobalDataset(data)
-    });
-
-    // Get the color based on value provided
-    function getColor(d) {
-      return d > 9  ? '#662506' :
-             d > 8  ? '#9934046' :
-             d > 7  ? '#cc4c02' :
-             d > 6  ? '#ec7014' :
-             d > 5  ? '#fe9929' :
-             d > 4  ? '#fec44f' :
-             d > 3  ? '#fee391' :
-             d > 2  ? '#fff7bc' :
-             d > 1  ? '#ffffe5' :
-                       '#fff';
-    }
-
-    // Set the style of the feature
-    function style(feature) {
-      var disasterValue = getDisasterValueForCity(disasterDataset, feature.properties.id_kabkota);
-
-      return {
-        fillColor: getColor(disasterValue),
-        weight: 0,
-        opacity: 0.333,
-        color: '#000',
-        fillOpacity: 0.333
-      };
-    }
-
-    // Set the style of the feature
-    function styleVulnerable(feature) {
-      var vulnerableValue = getVulnerableValueForCity(vulnerableDataset, feature.properties.id_kabkota);
-
-      return {
-        fillColor: getColor(vulnerableValue),
-        weight: 0,
-        opacity: 0.333,
-        color: '#000',
-        fillOpacity: 0.333
-      };
-    }
-
-    // Set the style of the feature
-    function styleArea(feature) {
-      var areaValue = getAreaValueForCity(areaDataset, feature.properties.id_kabkota);
-
-      return {
-        fillColor: getColor(areaValue),
-        weight: 0,
-        opacity: 0.333,
-        color: '#000',
-        fillOpacity: 0.333
-      };
-    }
-
-    // Get the Number of Disasters for Specified City ID
-    function getDisasterValueForCity(disasterDataset, city_id) {
-      for(var i = 0; i < disasterDataset.length; i++) {
-          if( disasterDataset[i].city_id == city_id){
-            return disasterDataset[i].value;
-          }
-      }
-    }
-
-    // Get the Vulnerability for Specified City ID
-    function getVulnerableValueForCity(vulnerableDataset, city_id) {
-      for(var i = 0; i < vulnerableDataset.length; i++) {
-          if( vulnerableDataset[i].city_id == city_id){
-            return vulnerableDataset[i].value / 10;
-          }
-      }
-    }
-
-    // Get the Area for Specified City ID
-    function getAreaValueForCity(areaDataset, city_id) {
-      for(var i = 0; i < areaDataset.length; i++) {
-          if( areaDataset[i].city_id == city_id){
-            return areaDataset[i].value / 10;
-          }
-      }
-    }
-
-    // Add to global Dataset
-    var globalDataset = {};
-    function addToGlobalDataset(data) {
-      for(var i = 0; i < data.data.length; i++) {
-          //
-      }
-    }
-  </script>
+  <script src="/assets/js/map.js"></script>
 
   <!-- OD Pair Data Visualisation -->
-  <script>
-  // get the data from the API
-  $.getJSON('http://139.59.230.55/frontend/api/odpair', function(data){
-
-      var sortable = [];
-      data.forEach( function (arrayItem)
-      {
-          var valueToPush = {};
-          valueToPush['name'] = arrayItem.from + " to " + arrayItem.to;
-          valueToPush['value'] = arrayItem.count;
-          sortable.push(valueToPush);
-      });
-
-      //sort bars based on value
-      data = sortable.sort(function (a, b) {
-          return d3.ascending(a.value, b.value);
-      })
-
-      // keep max value
-      var maxValue = d3.max(data, function (d) {
-          return d.value;
-      });
-
-      // Slice limit to 20% of dataset
-      data = data.slice(data.length - (data.length * 0.2), data.length);
-
-      //set up svg using margin conventions
-      // we'll need plenty of room on the left for labels
-      var margin = {
-          top: 15,
-          right: 55,
-          bottom: 15,
-          left: 130
-      };
-
-      var width = 900 - margin.left - margin.right,
-          height = 700 - margin.top - margin.bottom;
-
-      var svg = d3.select("#graphid").append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      var x = d3.scale.linear()
-          .range([0, width])
-          .domain([0, maxValue]);
-
-      var y = d3.scale.ordinal()
-          .rangeRoundBands([height, 0], .1)
-          .domain(data.map(function (d) {
-              return d.name;
-          }));
-
-      //make y axis to show bar names
-      var yAxis = d3.svg.axis()
-          .scale(y)
-          //no tick marks
-          .tickSize(0)
-          .orient("left");
-
-      var gy = svg.append("g")
-          .attr("class", "y axis")
-          .call(yAxis)
-
-      var bars = svg.selectAll(".bar")
-          .data(data)
-          .enter()
-          .append("g")
-
-      //append rects
-      bars.append("rect")
-          .attr("class", "bar")
-          .attr("y", function (d) {
-              return y(d.name);
-          })
-          .attr("height", y.rangeBand())
-          .attr("x", 0)
-          .attr("width", function (d) {
-              return x(d.value);
-          });
-
-      //add a value label to the right of each bar
-      bars.append("text")
-          .attr("class", "label")
-          //y position of the label is halfway down the bar
-          .attr("y", function (d) {
-              return y(d.name) + y.rangeBand() / 2 + 4;
-          })
-          //x position is 3 pixels to the right of the bar
-          .attr("x", function (d) {
-              return x(d.value) + 3;
-          })
-          .text(function (d) {
-              return d.value;
-          });
-  });
-  </script>
+  <script src="/assets/js/graph.js"></script>
 
 </body>
 </html>
